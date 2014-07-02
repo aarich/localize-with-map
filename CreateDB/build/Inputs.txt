@@ -1,0 +1,14 @@
+	Input Cloud Name:
+input.pcd
+	width of images to be created:
+100
+	height of images to be created:
+100
+	resolution of voxel grids:
+0.01f
+	distance from pinhole:
+200
+	initial rotation about Y Axis:
+0
+	Number of locations per side (n^2 images created)
+3
