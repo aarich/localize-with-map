@@ -1,21 +1,10 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
+*.png
+*.PNG
+*.jpg
+*.JPG
+*.pcd
+*.PCD
+*.OBJ
 *.obj
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+*.ply
+*.PLY
