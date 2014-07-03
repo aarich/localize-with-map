@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
 
 #include <pcl/point_cloud.h>
 #include <pcl/octree/octree.h>
@@ -166,8 +167,8 @@ map<vector<float>, Mat> createImages(PointCloud<PT>::Ptr cloud, int nop, int w, 
     yawbacktf.rotate (Eigen::AngleAxisf (yawback, Eigen::Vector3f::UnitZ()));
 
     // Pitch is for looking up and down.
-    float pitchup = 0.523598776;
-    float pitchdown = -1.047197552;
+    float pitchup = 0.261799388; // (15 deg) 30 deg: 0.523598776;
+    float pitchdown = -2 * pitchup;
     // Initialize pitchup object
     Eigen::Affine3f pitchuptf = Eigen::Affine3f::Identity();
     pitchuptf.rotate (Eigen::AngleAxisf (pitchup, Eigen::Vector3f::UnitX()));
@@ -175,6 +176,9 @@ map<vector<float>, Mat> createImages(PointCloud<PT>::Ptr cloud, int nop, int w, 
     Eigen::Affine3f pitchdowntf = Eigen::Affine3f::Identity();
     pitchdowntf.rotate (Eigen::AngleAxisf (pitchdown, Eigen::Vector3f::UnitX()));
 
+    TickMeter tm;
+    tm.reset();
+    tm.start();
 
     // Initialize starting location and direction
     vector<float> location;
@@ -201,7 +205,14 @@ map<vector<float>, Mat> createImages(PointCloud<PT>::Ptr cloud, int nop, int w, 
         for (int y = 0; y < nop; y++)
         {
             // cout << "  " << done << "/" << todo << " or " << 100 * done / todo << " percent done.\n";
-            cout << 100 * done / todo << " percent done.\n";
+            tm.stop();
+            double s = tm.getTimeSec();
+            double x = s * (double) todo / (double) done;
+            tm.start();
+            if (done == 0)
+                cout << "  " << 100 * done / todo << " percent done. Estimated a bajillion minutes remaining.\n";
+            else
+                cout << "  " << 100 * done / todo << " percent done. Estimated " << (x-s)/60.0 << " minutes remaining.\n";
             // Move to the new y!
             tf = Eigen::Affine3f::Identity();
             tf.translation() << 0.0, ydiv, 0.0;
@@ -256,7 +267,9 @@ map<vector<float>, Mat> createImages(PointCloud<PT>::Ptr cloud, int nop, int w, 
         location[1] -= nop * ydiv;
     }
 
-    cout << "  Done.\n>" << endl;
+    tm.stop();
+
+    cout << "  Done. Took " << tm.getTimeSec()/60.0 << " minutes.\n>" << endl;
 
     return images;
 }

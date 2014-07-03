@@ -123,4 +123,15 @@ namespace averageImage {
         return difference/(mat1.rows * mat1.cols);
     }
 
+    Mat getPixSumFromImage(const Mat& image, const int divisions)    
+    {
+        Mat iImage;
+        integral(image, iImage, CV_64F);
+        
+        Rect ROI (1, 1, iImage.cols-1, iImage.rows-1);
+        Mat cropped = iImage(ROI);
+
+        return getPixSum(cropped, divisions);
+    }
+
 }

@@ -6,6 +6,26 @@
 
 #IncludeRegexTransform: 
 
+/home/robotics/Desktop/Localize/CreateDB/src/averageImage.h
+opencv2/highgui/highgui.hpp
+/home/robotics/Desktop/Localize/CreateDB/src/opencv2/highgui/highgui.hpp
+opencv2/features2d/features2d.hpp
+/home/robotics/Desktop/Localize/CreateDB/src/opencv2/features2d/features2d.hpp
+opencv2/contrib/contrib.hpp
+/home/robotics/Desktop/Localize/CreateDB/src/opencv2/contrib/contrib.hpp
+opencv2/nonfree/nonfree.hpp
+/home/robotics/Desktop/Localize/CreateDB/src/opencv2/nonfree/nonfree.hpp
+opencv2/core/core.hpp
+/home/robotics/Desktop/Localize/CreateDB/src/opencv2/core/core.hpp
+opencv2/calib3d/calib3d.hpp
+/home/robotics/Desktop/Localize/CreateDB/src/opencv2/calib3d/calib3d.hpp
+cvaux.h
+/home/robotics/Desktop/Localize/CreateDB/src/cvaux.h
+iostream
+-
+fstream
+-
+
 /home/robotics/Desktop/Localize/CreateDB/src/createDB.cpp
 opencv2/highgui/highgui.hpp
 /home/robotics/Desktop/Localize/CreateDB/src/opencv2/highgui/highgui.hpp
@@ -45,13 +65,21 @@ iostream
 -
 fstream
 -
+string
+-
+sstream
+-
 render.h
 /home/robotics/Desktop/Localize/CreateDB/src/render.h
+averageImage.h
+/home/robotics/Desktop/Localize/CreateDB/src/averageImage.h
 
 /home/robotics/Desktop/Localize/CreateDB/src/render.h
 iostream
 -
 cstdlib
+-
+cmath
 -
 pcl/point_cloud.h
 -
