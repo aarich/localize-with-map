@@ -100,31 +100,14 @@ namespace averageImage {
         return results;
     }
 
-    // Determine Similarity of two images. Only works for matrices of the same size, for now.
-    float determineSimilarity (const Mat& mat1, const Mat& mat2)
-    {
-        if (mat1.size() != mat2.size())
-        {
-            cout << "Matrices are not the same size";
-            return -1;
-        } 
-
-        int difference = 0;
-
-        for (int r = 0; r < mat1.rows; r++)
-        {
-            for (int c = 0; c < mat1.cols; c++)
-            {
-                difference += abs(mat1.at<int>(r,c) - mat2.at<int>(r,c));
-            }
-        }
-
-        // Calculate mean difference
-        return difference/(mat1.rows * mat1.cols);
-    }
-
     Mat getPixSumFromImage(const Mat& image, const int divisions)    
     {
+        Mat newImage;
+        if (image.channels() > 1)
+            cvtColor(image, newImage, CV_BGR2GRAY);
+        else
+            newImage = image;
+
         Mat iImage;
         integral(image, iImage, CV_64F);
         

@@ -51,6 +51,6 @@ namespace similarities
         float ewd = elementWiseDistance(mat1, mat2);
         float matrixnorm = norm(mat1, mat2);
 
-        return (int) ewd + 0.01 * matrixnorm;
+        return (int) ewd + 0.001 * matrixnorm;
     }
 }

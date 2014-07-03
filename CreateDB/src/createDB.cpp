@@ -2,8 +2,12 @@
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/contrib/contrib.hpp"
 #include "opencv2/nonfree/nonfree.hpp"
+#include "opencv2/nonfree/features2d.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/opencv.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
 #include "cvaux.h"
 
 #include <pcl/io/vtk_lib_io.h>
@@ -123,6 +127,9 @@ int main(int argc, char** argv)
         // Directory to look for photos
     getline( file, str ); getline( file, str );
     string dir =str.c_str();
+        // Directory to look for kp and descriptors
+    getline( file, str ); getline( file, str );
+    string kdir =str.c_str();
         // save photos?
     getline( file, str ); getline( file, str );
     string savePhotos =str.c_str();
@@ -131,7 +138,14 @@ int main(int argc, char** argv)
     // Done Getting Input Data
 
     map<vector<float>, Mat> imagemap;
+    map<vector<float>, vector<KeyPoint> > kpmap;
+    map<vector<float>, Mat> descriptormap;
     imagemap.clear();
+
+    vector<KeyPoint> keypoints;
+    Mat descriptors;
+
+
 
     if ( !fs::exists( dir ) || lorc == "c" )
     { // Load Point Cloud and render images
@@ -150,41 +164,109 @@ int main(int argc, char** argv)
 
         if (savePhotos == "y")
         {
+            // For Keypoint Detection
+            int minHessian = 300;
+
+            SurfFeatureDetector detector1 (minHessian);
+
+            SurfDescriptorExtractor extractor1;
+
+            // Ptr<FeatureDetector> detector1 = createFeatureDetector( "SIFT" );
+            // Ptr<FeatureDetector> detector2 = createFeatureDetector( "SURF" );
+            // Ptr<FeatureDetector> detector3 = createFeatureDetector( "ORB" );
+            // Ptr<FeatureDetector> detector4 = createFeatureDetector( "FAST" );
+            // Ptr<FeatureDetector> detector5 = createFeatureDetector( "MSER" );
+
+            // Ptr<DescriptorExtractor> extractor1 = createDescriptorExtractor( "SIFT" );
+            // Ptr<DescriptorExtractor> extractor2 = createDescriptorExtractor( "SURF" );
+            // Ptr<DescriptorExtractor> extractor3 = createDescriptorExtractor( "ORB" );
+
+
             for (map<vector<float>, Mat>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
             {
-                string fn = dir + "/";
+                // Create image name and storagename
+                string imfn = dir + "/";
+                string kpfn = kdir + "/";
                 for (int j = 0; j < i->first.size(); j++)
-                    fn += boost::to_string(i->first[j]) + " ";
-                fn += ".jpg";
+                {
+                    imfn += boost::to_string(i->first[j]) + " ";
+                    kpfn += boost::to_string(i->first[j]) + " ";
+                }
+                imfn += ".jpg";
+                imwrite(imfn, i->second);
 
-                imwrite(fn, i->second);
+                // Detect keypoints, add to keypoint map. Same with descriptors
+
+                detector1.detect(i->second, keypoints);
+                extractor1.compute(i->second, keypoints, descriptors);
+
+                kpmap[i->first] = keypoints;
+                descriptormap[i->first] = descriptors;
+
+                // Store KP and Descriptors in yaml file.
+
+                kpfn += ".yml";
+                FileStorage store(kpfn, cv::FileStorage::WRITE);
+                write(store,"keypoints",keypoints);
+                write(store,"descriptors",descriptors);
+                store.release();
             }
         }
     } 
     else 
     { // load images from the folder dir
+        // First look into the folder to get a list of filenames
         vector<fs::path> ret;
         const char * pstr = dir.c_str();
         fs::path p(pstr);
         get_all(pstr, ret);
 
+        // We're going to store things in here:
+        vector<KeyPoint> keypoints;
+        Mat descriptors;
+
         for (int i = 0; i < ret.size(); i++)
         {
+            // Load Image via filename
             string fn = ret[i].string();
             istringstream iss(fn);
             vector<string> tokens;
-            copy(istream_iterator<string>(iss),
-               istream_iterator<string>(),
-               back_inserter<vector<string> >(tokens));
-            vector<float> ID;
-            for (int i = 0; i < 6; i++) // 6 becuase there are three location floats and three direction floats
-                ID.push_back(::atof(tokens[i].c_str()));
-            fn = dir + "/" + fn;
-            Mat m = imread(fn);
+            copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
 
+            // Construct ID from filename
+            vector<float> ID;
+            for (int i = 0; i < 6; i++) // 6 because there are three location floats and three direction floats
+                ID.push_back(::atof(tokens[i].c_str()));
+            string imfn = dir + "/" + fn;
+
+            // Read image and add to imagemap.
+            Mat m = imread(imfn);
             imagemap[ID] = m;
+
+            // Create Filename for loading Keypoints and descriptors
+            string kpfn = kdir + "/";
+            for (int j = 0; j < ID.size(); j++)
+            {
+                kpfn += boost::to_string(ID[j]) + " ";
+            }
+            kpfn = kpfn+ ".yml";
+            
+            // Create filestorage item to read from and add to map.
+            FileStorage store(kpfn, cv::FileStorage::READ);
+
+            FileNode n1 = store["keypoints"];
+            read(n1,keypoints);
+            FileNode n2 = store["descriptors"];
+            read(n2,descriptors);
+
+            store.release();
+
+            kpmap[ID] = keypoints;
+            descriptormap[ID] = descriptors;
         }
     }
+
+
 
     TickMeter tm;
     tm.reset();
@@ -197,7 +279,7 @@ int main(int argc, char** argv)
     {
         vector<float> ID = i->first;
         Mat Image = i-> second;
-        GaussianBlur( Image, Image, Size(5,5), 0, 0, BORDER_DEFAULT );
+        // GaussianBlur( Image, Image, Size(5,5), 0, 0, BORDER_DEFAULT );
 
 
         gsmap[ID] = averageImage::getPixSumFromImage(Image, divs);
@@ -253,7 +335,7 @@ int main(int argc, char** argv)
             }
         }
         // cout << "Sim: " << sim << "\tmax_value: " << max_value << endl;
-        if (top.size() <= numtoreturn)
+        if (top.size() < numtoreturn)
             top[ID] = sim;
         else
         {
@@ -285,5 +367,5 @@ int main(int argc, char** argv)
     cout << ">\nComparisons took " << s << " seconds for " << imagemap.size() << " images (" 
         << (int) imagemap.size()/s << " images per second)." << endl;
 
-    return 0;
+return 0;
 }
