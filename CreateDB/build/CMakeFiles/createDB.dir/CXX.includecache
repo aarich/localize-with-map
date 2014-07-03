@@ -61,6 +61,8 @@ pcl/common/common_headers.h
 -
 pcl/filters/filter.h
 -
+boost/filesystem.hpp
+/home/robotics/Desktop/Localize/CreateDB/src/boost/filesystem.hpp
 iostream
 -
 fstream
@@ -68,6 +70,10 @@ fstream
 string
 -
 sstream
+-
+algorithm
+-
+iterator
 -
 render.h
 /home/robotics/Desktop/Localize/CreateDB/src/render.h

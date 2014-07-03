@@ -17,27 +17,54 @@
 #include <pcl/common/common_headers.h>
 #include <pcl/filters/filter.h>
 
+#include "boost/filesystem.hpp"   
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <iterator>
 
 #include "render.h"
 #include "averageImage.h"
+#include "Similarity.h"
 
 using namespace cv;
 using namespace std;
+namespace fs = ::boost::filesystem;
 
 // Print usage
 static void printPrompt( const string& applName )
 {
     cout << "/*\n"
-         << " * Given a map and other parameters, this class will create a serialized map.\n"
+    << " * Given a map and other parameters, this class will create a serialized map.\n"
          << " */\n" << endl;
 
     cout << endl << "Format:\n" << endl;
-    cout << "./" << applName << " [Inputs.txt]" << endl;
+    cout << applName << " [Inputs.txt]" << endl;
     cout << endl;
+}
+
+// return the filenames of all files that have the specified extension
+// in the specified directory and all subdirectories
+void get_all(const fs::path& root, vector<fs::path>& ret)
+{  
+    if (!fs::exists(root)) return;
+
+    if (fs::is_directory(root))
+    {
+        fs::recursive_directory_iterator it(root);
+        fs::recursive_directory_iterator endit;
+        while(it != endit)
+        {
+            if (fs::is_regular_file(*it))
+            {
+                ret.push_back(it->path().filename());
+            }
+            ++it;
+        }
+    }
 }
 
 int main(int argc, char** argv)
@@ -50,60 +77,117 @@ int main(int argc, char** argv)
 
     cv::initModule_nonfree();
 
+    // Get Input Data
     ifstream file(argv[1]);
     if ( !file.is_open() )
         return false;
-
+    
     string str;
-
-    // Image Name
+    
+        // Image Name
     getline( file, str ); getline( file, str );
     string image_name = str;
-    // Cloud Name
+        // Cloud Name
     getline( file, str ); getline( file, str );
     string cloud_name = str;
-    // width of images to be created.
+        // width of images to be created.
     getline( file, str ); getline( file, str );
     int w = atoi(str.c_str());
-    // height of images to be created
+        // height of images to be created
     getline( file, str ); getline( file, str );
     int h = atoi(str.c_str());
-    // resolution of voxel grids
+        // resolution of voxel grids
     getline( file, str ); getline( file, str );
     float r = atof(str.c_str());
-    // f (distance from pinhole)
+        // f (distance from pinhole)
     getline( file, str ); getline( file, str );
     float f = atof(str.c_str());
-    // thetax (initial rotation about X Axis of map)
+        // thetax (initial rotation about X Axis of map)
     getline( file, str ); getline( file, str );
     float thetaX = atof(str.c_str());
-    // thetay (initial rotation about Y Axis of map)
+        // thetay (initial rotation about Y Axis of map)
     getline( file, str ); getline( file, str );
     float thetaY = atof(str.c_str());
-    // number of points to go to
+        // number of points to go to
     getline( file, str ); getline( file, str );
     float nop = atoi(str.c_str());
-    // Number of divisions
+        // Number of divisions
     getline( file, str ); getline( file, str );
     float divs = atoi(str.c_str());
-    // Number of images to return
+        // Number of images to return
     getline( file, str ); getline( file, str );
-    int numtoreturn = atoi(str.c_str());
-    file.close();
-
-    PointCloud<PT>::Ptr cloud (new pcl::PointCloud<PT>);
-    io::loadPCDFile<PT>(cloud_name, *cloud);
-
-    Eigen::Affine3f tf = Eigen::Affine3f::Identity();
-    tf.rotate (Eigen::AngleAxisf (thetaX, Eigen::Vector3f::UnitX()));
-    pcl::transformPointCloud (*cloud, *cloud, tf);
-    tf = Eigen::Affine3f::Identity();
-    tf.rotate (Eigen::AngleAxisf (thetaY, Eigen::Vector3f::UnitY()));
-    pcl::transformPointCloud (*cloud, *cloud, tf);
-
-    // Create images from a point cloud
-    map<vector<float>, Mat> imagemap = render::createImages(cloud, nop, w, h, r, f);
+    int numtoreturn = atoi(str.c_str());    
+        // Should we load or create photos?
+    getline( file, str ); getline( file, str );
+    string lorc =str.c_str();
+        // Directory to look for photos
+    getline( file, str ); getline( file, str );
+    string dir =str.c_str();
+        // save photos?
+    getline( file, str ); getline( file, str );
+    string savePhotos =str.c_str();
     
+    file.close();
+    // Done Getting Input Data
+
+    map<vector<float>, Mat> imagemap;
+    imagemap.clear();
+
+    if ( !fs::exists( dir ) || lorc == "c" )
+    { // Load Point Cloud and render images
+        PointCloud<PT>::Ptr cloud (new pcl::PointCloud<PT>);
+        io::loadPCDFile<PT>(cloud_name, *cloud);
+
+        Eigen::Affine3f tf = Eigen::Affine3f::Identity();
+        tf.rotate (Eigen::AngleAxisf (thetaX, Eigen::Vector3f::UnitX()));
+        pcl::transformPointCloud (*cloud, *cloud, tf);
+        tf = Eigen::Affine3f::Identity();
+        tf.rotate (Eigen::AngleAxisf (thetaY, Eigen::Vector3f::UnitY()));
+        pcl::transformPointCloud (*cloud, *cloud, tf);
+
+        // Create images from point cloud
+        imagemap = render::createImages(cloud, nop, w, h, r, f);
+
+        if (savePhotos == "y")
+        {
+            for (map<vector<float>, Mat>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
+            {
+                string fn = dir + "/";
+                for (int j = 0; j < i->first.size(); j++)
+                    fn += boost::to_string(i->first[j]) + " ";
+                fn += ".jpg";
+
+                imwrite(fn, i->second);
+            }
+        }
+    } 
+    else 
+    { // load images from the folder dir
+        vector<fs::path> ret;
+        const char * pstr = dir.c_str();
+        fs::path p(pstr);
+        get_all(pstr, ret);
+
+        for (int i = 0; i < ret.size(); i++)
+        {
+            string fn = ret[i].string();
+            istringstream iss(fn);
+            vector<string> tokens;
+            copy(istream_iterator<string>(iss),
+               istream_iterator<string>(),
+               back_inserter<vector<string> >(tokens));
+            vector<float> ID;
+            for (int i = 0; i < 6; i++) // 6 becuase there are three location floats and three direction floats
+                ID.push_back(::atof(tokens[i].c_str()));
+            fn = dir + "/" + fn;
+            Mat m = imread(fn);
+
+            imagemap[ID] = m;
+        }
+    }
+
+    TickMeter tm;
+    tm.reset();
     cout << "<\n  Analyzing Images ..." << endl;
 
     // We have a bunch of images, now we compute their grayscale and black and white.
@@ -123,19 +207,21 @@ int main(int argc, char** argv)
     Mat gsimage = averageImage::getPixSumFromImage(image, divs);
     Mat bwimage = averageImage::aboveBelow(gsimage);
 
+    tm.start();
+
+
     cout << ">\n<\n  Comparing Images ..." << endl;
 
     // We have their features, now compare them!
-    map<vector<float>, float> gssim;
-    map<vector<float>, float> bwsim;
+    map<vector<float>, float> gssim; // Gray Scale Similarity
+    map<vector<float>, float> bwsim; // Above Below Similarity
+
     for (map<vector<float>, Mat>::iterator i = gsmap.begin(); i != gsmap.end(); ++i)
     {
         vector<float> ID = i->first;
-        gssim[ID] = averageImage::determineSimilarity(i->second, gsimage);
-        bwsim[ID] = averageImage::determineSimilarity(bwmap[ID], bwimage); 
+        gssim[ID] = similarities::getSimilarity(i->second, gsimage);
+        bwsim[ID] = similarities::getSimilarity(bwmap[ID], bwimage); 
     }
-
-    // namedWindow("Images");
 
     map<vector<float>, int> top;
 
@@ -147,13 +233,7 @@ int main(int argc, char** argv)
     {
         vector<float> ID = i->first;
 
-        // imshow("Images", i->second);
-        // waitKey(0);
-
-        int GSSIM = gssim[ID];
-        int BWSIM = bwsim[ID];
-
-        int sim = GSSIM + 0.3*BWSIM;
+        int sim = gssim[ID] + 0.3*bwsim[ID];
 
         if (!gotone)
         {
@@ -185,7 +265,7 @@ int main(int argc, char** argv)
         }
     }
 
-    cout << ">\n<\n  Writing Images ..." << endl;
+    cout << ">\n<\n  Writing top " << numtoreturn << " images ..." << endl;
 
     for (iter i = top.begin(); i != top.end(); ++i)
     {
@@ -199,7 +279,11 @@ int main(int argc, char** argv)
 
         imwrite(fn, imagemap[ID]);
     }
-    cout << ">" << endl;
+
+    tm.stop();
+    double s = tm.getTimeSec();
+    cout << ">\nComparisons took " << s << " seconds for " << imagemap.size() << " images (" 
+        << (int) imagemap.size()/s << " images per second)." << endl;
 
     return 0;
 }

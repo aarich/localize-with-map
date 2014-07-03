@@ -3,20 +3,26 @@ pngfile.png
 	Input Cloud Name:
 input.pcd
 	width of images to be created:
-220
+100
 	height of images to be created:
-220
+100
 	resolution of voxel grids:
 0.01f
 	distance from pinhole:
-200
+250
 	initial rotation about X Axis:
 0
 	initial rotation about Y Axis:
 270
 	Number of locations per side (n^2 points, 24n^2 images created)
-20
+10
 	Number of divisions for pixel sum and black and white images
 50
 	Number of images to return
-15
+5
+	Load or Create images? (l or c)
+l
+	Folder to look for images.
+photos
+	Save images to folder named above? y or n?
+y
