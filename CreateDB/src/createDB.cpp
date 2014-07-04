@@ -79,7 +79,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    cv::initModule_nonfree();
+    initModule_nonfree();
 
     // Get Input Data
     ifstream file(argv[1]);
@@ -138,14 +138,32 @@ int main(int argc, char** argv)
     // Done Getting Input Data
 
     map<vector<float>, Mat> imagemap;
-    map<vector<float>, vector<KeyPoint> > kpmap;
-    map<vector<float>, Mat> descriptormap;
+    map<vector<float>, Mat> surfmap;
+    map<vector<float>, Mat> siftmap;
+    map<vector<float>, Mat> orbmap;
+    map<vector<float>, Mat> fastmap;
     imagemap.clear();
 
-    vector<KeyPoint> keypoints;
-    Mat descriptors;
+    vector<KeyPoint> SurfKeypoints;
+    vector<KeyPoint> SiftKeypoints;
+    vector<KeyPoint> OrbKeypoints;
+    vector<KeyPoint> FastKeypoints;
+    Mat SurfDescriptors;
+    Mat SiftDescriptors;
+    Mat OrbDescriptors;
+    Mat FastDescriptors;
+
+    int minHessian = 300;
+
+    SurfFeatureDetector SurfDetector (minHessian);
+    SiftFeatureDetector SiftDetector (minHessian);
+    OrbFeatureDetector OrbDetector (minHessian);
+    FastFeatureDetector FastDetector (minHessian);
 
 
+    SurfDescriptorExtractor SurfExtractor;
+    SiftDescriptorExtractor SiftExtractor;
+    OrbDescriptorExtractor OrbExtractor;
 
     if ( !fs::exists( dir ) || lorc == "c" )
     { // Load Point Cloud and render images
@@ -164,24 +182,6 @@ int main(int argc, char** argv)
 
         if (savePhotos == "y")
         {
-            // For Keypoint Detection
-            int minHessian = 300;
-
-            SurfFeatureDetector detector1 (minHessian);
-
-            SurfDescriptorExtractor extractor1;
-
-            // Ptr<FeatureDetector> detector1 = createFeatureDetector( "SIFT" );
-            // Ptr<FeatureDetector> detector2 = createFeatureDetector( "SURF" );
-            // Ptr<FeatureDetector> detector3 = createFeatureDetector( "ORB" );
-            // Ptr<FeatureDetector> detector4 = createFeatureDetector( "FAST" );
-            // Ptr<FeatureDetector> detector5 = createFeatureDetector( "MSER" );
-
-            // Ptr<DescriptorExtractor> extractor1 = createDescriptorExtractor( "SIFT" );
-            // Ptr<DescriptorExtractor> extractor2 = createDescriptorExtractor( "SURF" );
-            // Ptr<DescriptorExtractor> extractor3 = createDescriptorExtractor( "ORB" );
-
-
             for (map<vector<float>, Mat>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
             {
                 // Create image name and storagename
@@ -197,19 +197,34 @@ int main(int argc, char** argv)
 
                 // Detect keypoints, add to keypoint map. Same with descriptors
 
-                detector1.detect(i->second, keypoints);
-                extractor1.compute(i->second, keypoints, descriptors);
+                SurfDetector.detect(i->second, SurfKeypoints);
+                SiftDetector.detect(i->second, SiftKeypoints);
+                OrbDetector.detect(i->second, OrbKeypoints);
+                FastDetector.detect(i->second, FastKeypoints);
 
-                kpmap[i->first] = keypoints;
-                descriptormap[i->first] = descriptors;
+                SurfExtractor.compute(i->second, SurfKeypoints, SurfDescriptors);
+                SiftExtractor.compute(i->second, SiftKeypoints, SiftDescriptors);
+                OrbExtractor.compute(i->second, OrbKeypoints, OrbDescriptors);
+                SiftExtractor.compute(i->second, FastKeypoints, FastDescriptors);
 
                 // Store KP and Descriptors in yaml file.
 
                 kpfn += ".yml";
                 FileStorage store(kpfn, cv::FileStorage::WRITE);
-                write(store,"keypoints",keypoints);
-                write(store,"descriptors",descriptors);
+                write(store,"SurfKeypoints",SurfKeypoints);
+                write(store,"SiftKeypoints",SiftKeypoints);
+                write(store,"OrbKeypoints", OrbKeypoints);
+                write(store,"FastKeypoints",FastKeypoints);
+                write(store,"SurfDescriptors",SurfDescriptors);
+                write(store,"SiftDescriptors",SiftDescriptors);
+                write(store,"OrbDescriptors", OrbDescriptors);
+                write(store,"FastDescriptors",FastDescriptors);
                 store.release();
+
+                surfmap[i->first] = SurfDescriptors;
+                siftmap[i->first] = SiftDescriptors;
+                orbmap[i->first]  = OrbDescriptors;
+                fastmap[i->first] = FastDescriptors;
             }
         }
     } 
@@ -220,10 +235,6 @@ int main(int argc, char** argv)
         const char * pstr = dir.c_str();
         fs::path p(pstr);
         get_all(pstr, ret);
-
-        // We're going to store things in here:
-        vector<KeyPoint> keypoints;
-        Mat descriptors;
 
         for (int i = 0; i < ret.size(); i++)
         {
@@ -249,24 +260,37 @@ int main(int argc, char** argv)
             {
                 kpfn += boost::to_string(ID[j]) + " ";
             }
+
             kpfn = kpfn+ ".yml";
             
             // Create filestorage item to read from and add to map.
             FileStorage store(kpfn, cv::FileStorage::READ);
 
-            FileNode n1 = store["keypoints"];
-            read(n1,keypoints);
-            FileNode n2 = store["descriptors"];
-            read(n2,descriptors);
+            FileNode n1 = store["SurfKeypoints"];
+            read(n1,SurfKeypoints);
+            FileNode n2 = store["SiftKeypoints"];
+            read(n2,SiftKeypoints);
+            FileNode n3 = store["OrbKeypoints"];
+            read(n3,OrbKeypoints);
+            FileNode n4 = store["FastKeypoints"];
+            read(n4,FastKeypoints);
+            FileNode n5 = store["SurfDescriptors"];
+            read(n5,SurfDescriptors);
+            FileNode n6 = store["SiftDescriptors"];
+            read(n6,SiftDescriptors);
+            FileNode n7 = store["OrbDescriptors"];
+            read(n7,OrbDescriptors);
+            FileNode n8 = store["FastDescriptors"];
+            read(n8,FastDescriptors);
 
             store.release();
 
-            kpmap[ID] = keypoints;
-            descriptormap[ID] = descriptors;
+            surfmap[ID] = SurfDescriptors;
+            siftmap[ID] = SiftDescriptors;
+            orbmap[ID]  = OrbDescriptors;
+            fastmap[ID] = FastDescriptors;
         }
     }
-
-
 
     TickMeter tm;
     tm.reset();
@@ -279,7 +303,7 @@ int main(int argc, char** argv)
     {
         vector<float> ID = i->first;
         Mat Image = i-> second;
-        // GaussianBlur( Image, Image, Size(5,5), 0, 0, BORDER_DEFAULT );
+        GaussianBlur( Image, Image, Size(5,5), 0, 0, BORDER_DEFAULT );
 
 
         gsmap[ID] = averageImage::getPixSumFromImage(Image, divs);
@@ -289,20 +313,53 @@ int main(int argc, char** argv)
     Mat gsimage = averageImage::getPixSumFromImage(image, divs);
     Mat bwimage = averageImage::aboveBelow(gsimage);
 
-    tm.start();
+    cout << gsimage <<endl;
+    imwrite("GS.jpg", gsimage);
+    namedWindow("GS");
+    imshow("GS", gsimage);
+    waitKey(0);
 
+    vector<KeyPoint> imgSurfKeypoints;
+    vector<KeyPoint> imgSiftKeypoints;
+    vector<KeyPoint> imgOrbKeypoints;
+    vector<KeyPoint> imgFastKeypoints;
+    Mat imgSurfDescriptors;
+    Mat imgSiftDescriptors;
+    Mat imgOrbDescriptors;
+    Mat imgFastDescriptors;
+
+    SurfDetector.detect(image, imgSurfKeypoints);
+    SiftDetector.detect(image, imgSiftKeypoints);
+    OrbDetector.detect(image, imgOrbKeypoints);
+    FastDetector.detect(image, imgFastKeypoints);
+
+    SurfExtractor.compute(image, imgSurfKeypoints, imgSurfDescriptors);
+    SiftExtractor.compute(image, imgSiftKeypoints, imgSiftDescriptors);
+    OrbExtractor.compute(image, imgOrbKeypoints, imgOrbDescriptors);
+    SiftExtractor.compute(image, imgFastKeypoints, imgFastDescriptors);
+
+
+    tm.start();
 
     cout << ">\n<\n  Comparing Images ..." << endl;
 
     // We have their features, now compare them!
     map<vector<float>, float> gssim; // Gray Scale Similarity
     map<vector<float>, float> bwsim; // Above Below Similarity
+    map<vector<float>, float> surfsim;
+    map<vector<float>, float> siftsim;
+    map<vector<float>, float> orbsim;
+    map<vector<float>, float> fastsim;
 
     for (map<vector<float>, Mat>::iterator i = gsmap.begin(); i != gsmap.end(); ++i)
     {
         vector<float> ID = i->first;
         gssim[ID] = similarities::getSimilarity(i->second, gsimage);
         bwsim[ID] = similarities::getSimilarity(bwmap[ID], bwimage); 
+        surfsim[ID] = similarities::compareDescriptors(surfmap[ID], imgSurfDescriptors);
+        siftsim[ID] = similarities::compareDescriptors(siftmap[ID], imgSiftDescriptors);
+        orbsim[ID] = 0;//similarities::compareDescriptors(orbmap[ID], imgOrbDescriptors);
+        fastsim[ID] = 0;//similarities::compareDescriptors(fastmap[ID], imgFastDescriptors);
     }
 
     map<vector<float>, int> top;
@@ -315,7 +372,12 @@ int main(int argc, char** argv)
     {
         vector<float> ID = i->first;
 
-        int sim = gssim[ID] + 0.3*bwsim[ID];
+        int sim = gssim[ID] + 0.5*bwsim[ID] + 5*surfsim[ID] + 0.3*siftsim[ID] + orbsim[ID] + fastsim[ID];
+
+        cout << surfsim[ID] << "\t";
+        cout << siftsim[ID] << "\t";
+        cout << orbsim[ID] << "\t";
+        cout << fastsim[ID] << endl;
 
         if (!gotone)
         {
@@ -327,9 +389,11 @@ int main(int argc, char** argv)
         iter end = top.end();
         int max_value = it->second;
         vector<float> max_ID = it->first;
-        for( ; it != end; ++it) {
+        for( ; it != end; ++it) 
+        {
             int current = it->second;
-            if(current > max_value) {
+            if(current > max_value) 
+            {
                 max_value = it->second;
                 max_ID = it->first;
             }
@@ -346,24 +410,48 @@ int main(int argc, char** argv)
             }
         }
     }
+    tm.stop();
+        double s = tm.getTimeSec();
+
 
     cout << ">\n<\n  Writing top " << numtoreturn << " images ..." << endl;
+
+    int count = 1;
+    namedWindow("Image");
+    namedWindow("Match");
+    namedWindow("ImageBW");
+    namedWindow("MatchBW");
+    namedWindow("ImageGS");
+    namedWindow("MatchGS");
+
+    imshow("Image", image);
+    imshow("ImageBW", bwimage);
+    imshow("ImageGS", gsimage);
+
+
+    vector<KeyPoint> currentPoints;
 
     for (iter i = top.begin(); i != top.end(); ++i)
     {
         vector<float> ID = i->first;
-        for (int j = 0; j < 3; j++)
-        {
-            cout << ID[j] << "\t";
-        }
-        cout << "Similarity: "<< i->second << "\tGrayScale: " << gssim[ID] << "\tBW: " << bwsim[ID] << endl;
-        string fn = "Sim_" + boost::to_string(i->second) + "_" + boost::to_string(gssim[ID]) + "_" + boost::to_string(bwsim[ID]) + ".png";
 
+        cout << "  Score: "<< i->second << "\tGrayScale: " << gssim[ID] << "\tBW: " << bwsim[ID] << "  \tSURF: " << surfsim[ID] << "\tSIFT: " << siftsim[ID] << endl;
+        string fn = "Sim_" + boost::to_string(count) + "_" + boost::to_string(i->second) + ".png";
         imwrite(fn, imagemap[ID]);
+        count++;
+
+        normalize(bwmap[ID], bwmap[ID], 0, 255, NORM_MINMAX, CV_64F);
+        normalize(gsmap[ID], gsmap[ID], 0, 255, NORM_MINMAX, CV_64F);
+
+        imshow("Match", imagemap[ID]);
+        imshow("MatchBW", bwmap[ID]);
+        imshow("MatchGS", gsmap[ID]);
+
+
+        waitKey(0);
+
     }
 
-    tm.stop();
-    double s = tm.getTimeSec();
     cout << ">\nComparisons took " << s << " seconds for " << imagemap.size() << " images (" 
         << (int) imagemap.size()/s << " images per second)." << endl;
 

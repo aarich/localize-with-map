@@ -103,6 +103,7 @@ namespace averageImage {
     Mat getPixSumFromImage(const Mat& image, const int divisions)    
     {
         Mat newImage;
+        cout << image.channels();
         if (image.channels() > 1)
             cvtColor(image, newImage, CV_BGR2GRAY);
         else

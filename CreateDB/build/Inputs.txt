@@ -15,13 +15,13 @@ input.pcd
 	initial rotation about Y Axis:
 270
 	Number of locations per side (n^2 points, 24n^2 images created)
-15
+3
 	Number of divisions for pixel sum and black and white images
-7
+50
 	Number of images to return
 4
 	Load or Create images? (l or c)
-c
+l
 	Folder to look for/save images.
 photos
 	Folder to look for/save keypoints and descriptors
