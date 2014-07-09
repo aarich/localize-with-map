@@ -1,0 +1,28 @@
+	Input image Name:
+pngfile.png
+	Input Cloud Name:
+input.pcd
+	width of images to be created:
+200
+	height of images to be created:
+200
+	resolution of voxel grids:
+0.01f
+	distance from pinhole:
+200
+	initial rotation about X Axis:
+0
+	initial rotation about Y Axis:
+270
+	Number of locations per side (n^2 points, 24n^2 images created)
+3
+	Number of divisions for pixel sum and black and white images
+50
+	Images to return
+4
+	Load or create? (l or c)
+c
+	Folder to save images.
+photos
+	Folder to save keypoints and descriptors
+kpd

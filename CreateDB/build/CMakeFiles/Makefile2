@@ -50,38 +50,73 @@ CMAKE_SOURCE_DIR = /home/robotics/Desktop/Localize/CreateDB
 CMAKE_BINARY_DIR = /home/robotics/Desktop/Localize/CreateDB/build
 
 #=============================================================================
-# Target rules for target CMakeFiles/createDB.dir
+# Target rules for target CMakeFiles/createDBWithImages.dir
 
 # All Build rule for target.
-CMakeFiles/createDB.dir/all:
-	$(MAKE) -f CMakeFiles/createDB.dir/build.make CMakeFiles/createDB.dir/depend
-	$(MAKE) -f CMakeFiles/createDB.dir/build.make CMakeFiles/createDB.dir/build
+CMakeFiles/createDBWithImages.dir/all:
+	$(MAKE) -f CMakeFiles/createDBWithImages.dir/build.make CMakeFiles/createDBWithImages.dir/depend
+	$(MAKE) -f CMakeFiles/createDBWithImages.dir/build.make CMakeFiles/createDBWithImages.dir/build
 	$(CMAKE_COMMAND) -E cmake_progress_report /home/robotics/Desktop/Localize/CreateDB/build/CMakeFiles  1
-	@echo "Built target createDB"
-.PHONY : CMakeFiles/createDB.dir/all
+	@echo "Built target createDBWithImages"
+.PHONY : CMakeFiles/createDBWithImages.dir/all
 
 # Include target in all.
-all: CMakeFiles/createDB.dir/all
+all: CMakeFiles/createDBWithImages.dir/all
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/createDB.dir/rule: cmake_check_build_system
+CMakeFiles/createDBWithImages.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/robotics/Desktop/Localize/CreateDB/build/CMakeFiles 1
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/createDB.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/createDBWithImages.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/robotics/Desktop/Localize/CreateDB/build/CMakeFiles 0
-.PHONY : CMakeFiles/createDB.dir/rule
+.PHONY : CMakeFiles/createDBWithImages.dir/rule
 
 # Convenience name for target.
-createDB: CMakeFiles/createDB.dir/rule
-.PHONY : createDB
+createDBWithImages: CMakeFiles/createDBWithImages.dir/rule
+.PHONY : createDBWithImages
 
 # clean rule for target.
-CMakeFiles/createDB.dir/clean:
-	$(MAKE) -f CMakeFiles/createDB.dir/build.make CMakeFiles/createDB.dir/clean
-.PHONY : CMakeFiles/createDB.dir/clean
+CMakeFiles/createDBWithImages.dir/clean:
+	$(MAKE) -f CMakeFiles/createDBWithImages.dir/build.make CMakeFiles/createDBWithImages.dir/clean
+.PHONY : CMakeFiles/createDBWithImages.dir/clean
 
 # clean rule for target.
-clean: CMakeFiles/createDB.dir/clean
+clean: CMakeFiles/createDBWithImages.dir/clean
+.PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/createDBWithPC.dir
+
+# All Build rule for target.
+CMakeFiles/createDBWithPC.dir/all:
+	$(MAKE) -f CMakeFiles/createDBWithPC.dir/build.make CMakeFiles/createDBWithPC.dir/depend
+	$(MAKE) -f CMakeFiles/createDBWithPC.dir/build.make CMakeFiles/createDBWithPC.dir/build
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/robotics/Desktop/Localize/CreateDB/build/CMakeFiles  2
+	@echo "Built target createDBWithPC"
+.PHONY : CMakeFiles/createDBWithPC.dir/all
+
+# Include target in all.
+all: CMakeFiles/createDBWithPC.dir/all
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/createDBWithPC.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/robotics/Desktop/Localize/CreateDB/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/createDBWithPC.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/robotics/Desktop/Localize/CreateDB/build/CMakeFiles 0
+.PHONY : CMakeFiles/createDBWithPC.dir/rule
+
+# Convenience name for target.
+createDBWithPC: CMakeFiles/createDBWithPC.dir/rule
+.PHONY : createDBWithPC
+
+# clean rule for target.
+CMakeFiles/createDBWithPC.dir/clean:
+	$(MAKE) -f CMakeFiles/createDBWithPC.dir/build.make CMakeFiles/createDBWithPC.dir/clean
+.PHONY : CMakeFiles/createDBWithPC.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/createDBWithPC.dir/clean
 .PHONY : clean
 
 #=============================================================================

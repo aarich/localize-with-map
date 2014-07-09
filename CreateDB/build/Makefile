@@ -96,41 +96,78 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named createDB
+# Target rules for targets named createDBWithImages
 
 # Build rule for target.
-createDB: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 createDB
-.PHONY : createDB
+createDBWithImages: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 createDBWithImages
+.PHONY : createDBWithImages
 
 # fast build rule for target.
-createDB/fast:
-	$(MAKE) -f CMakeFiles/createDB.dir/build.make CMakeFiles/createDB.dir/build
-.PHONY : createDB/fast
+createDBWithImages/fast:
+	$(MAKE) -f CMakeFiles/createDBWithImages.dir/build.make CMakeFiles/createDBWithImages.dir/build
+.PHONY : createDBWithImages/fast
 
-src/createDB.o: src/createDB.cpp.o
-.PHONY : src/createDB.o
+#=============================================================================
+# Target rules for targets named createDBWithPC
+
+# Build rule for target.
+createDBWithPC: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 createDBWithPC
+.PHONY : createDBWithPC
+
+# fast build rule for target.
+createDBWithPC/fast:
+	$(MAKE) -f CMakeFiles/createDBWithPC.dir/build.make CMakeFiles/createDBWithPC.dir/build
+.PHONY : createDBWithPC/fast
+
+src/createDBWithImages.o: src/createDBWithImages.cpp.o
+.PHONY : src/createDBWithImages.o
 
 # target to build an object file
-src/createDB.cpp.o:
-	$(MAKE) -f CMakeFiles/createDB.dir/build.make CMakeFiles/createDB.dir/src/createDB.cpp.o
-.PHONY : src/createDB.cpp.o
+src/createDBWithImages.cpp.o:
+	$(MAKE) -f CMakeFiles/createDBWithImages.dir/build.make CMakeFiles/createDBWithImages.dir/src/createDBWithImages.cpp.o
+.PHONY : src/createDBWithImages.cpp.o
 
-src/createDB.i: src/createDB.cpp.i
-.PHONY : src/createDB.i
+src/createDBWithImages.i: src/createDBWithImages.cpp.i
+.PHONY : src/createDBWithImages.i
 
 # target to preprocess a source file
-src/createDB.cpp.i:
-	$(MAKE) -f CMakeFiles/createDB.dir/build.make CMakeFiles/createDB.dir/src/createDB.cpp.i
-.PHONY : src/createDB.cpp.i
+src/createDBWithImages.cpp.i:
+	$(MAKE) -f CMakeFiles/createDBWithImages.dir/build.make CMakeFiles/createDBWithImages.dir/src/createDBWithImages.cpp.i
+.PHONY : src/createDBWithImages.cpp.i
 
-src/createDB.s: src/createDB.cpp.s
-.PHONY : src/createDB.s
+src/createDBWithImages.s: src/createDBWithImages.cpp.s
+.PHONY : src/createDBWithImages.s
 
 # target to generate assembly for a file
-src/createDB.cpp.s:
-	$(MAKE) -f CMakeFiles/createDB.dir/build.make CMakeFiles/createDB.dir/src/createDB.cpp.s
-.PHONY : src/createDB.cpp.s
+src/createDBWithImages.cpp.s:
+	$(MAKE) -f CMakeFiles/createDBWithImages.dir/build.make CMakeFiles/createDBWithImages.dir/src/createDBWithImages.cpp.s
+.PHONY : src/createDBWithImages.cpp.s
+
+src/createDBWithPointCloud.o: src/createDBWithPointCloud.cpp.o
+.PHONY : src/createDBWithPointCloud.o
+
+# target to build an object file
+src/createDBWithPointCloud.cpp.o:
+	$(MAKE) -f CMakeFiles/createDBWithPC.dir/build.make CMakeFiles/createDBWithPC.dir/src/createDBWithPointCloud.cpp.o
+.PHONY : src/createDBWithPointCloud.cpp.o
+
+src/createDBWithPointCloud.i: src/createDBWithPointCloud.cpp.i
+.PHONY : src/createDBWithPointCloud.i
+
+# target to preprocess a source file
+src/createDBWithPointCloud.cpp.i:
+	$(MAKE) -f CMakeFiles/createDBWithPC.dir/build.make CMakeFiles/createDBWithPC.dir/src/createDBWithPointCloud.cpp.i
+.PHONY : src/createDBWithPointCloud.cpp.i
+
+src/createDBWithPointCloud.s: src/createDBWithPointCloud.cpp.s
+.PHONY : src/createDBWithPointCloud.s
+
+# target to generate assembly for a file
+src/createDBWithPointCloud.cpp.s:
+	$(MAKE) -f CMakeFiles/createDBWithPC.dir/build.make CMakeFiles/createDBWithPC.dir/src/createDBWithPointCloud.cpp.s
+.PHONY : src/createDBWithPointCloud.cpp.s
 
 # Help Target
 help:
@@ -138,12 +175,16 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... createDB"
+	@echo "... createDBWithImages"
+	@echo "... createDBWithPC"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... src/createDB.o"
-	@echo "... src/createDB.i"
-	@echo "... src/createDB.s"
+	@echo "... src/createDBWithImages.o"
+	@echo "... src/createDBWithImages.i"
+	@echo "... src/createDBWithImages.s"
+	@echo "... src/createDBWithPointCloud.o"
+	@echo "... src/createDBWithPointCloud.i"
+	@echo "... src/createDBWithPointCloud.s"
 .PHONY : help
 
 

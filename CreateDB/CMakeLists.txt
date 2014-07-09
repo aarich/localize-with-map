@@ -14,10 +14,8 @@ add_definitions(${PCL_DEFINITIONS})
  
 set(PCL_BUILD_TYPE Release)
  
-file(GLOB createDB
-    "src/*.h"
-    "src/*.cpp"
-)
-add_executable(createDB ${createDB})
+add_executable(createDBWithPC src/createDBWithPointCloud.cpp)
+add_executable(createDBWithImages src/createDBWithImages.cpp)
  
-target_link_libraries (createDB ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries (createDBWithPC ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries (createDBWithImages ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})

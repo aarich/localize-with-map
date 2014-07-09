@@ -1,0 +1,10 @@
+	Number of divisions for pixel sum and black and white images
+50
+	Folder to look for images.
+photos
+	Folder to save BW images (above below)
+../../bwimages
+	Folder to save GS images (Average PixelSum).
+../../gsimages
+	Folder to save keypoints and descriptors
+../../kpd

@@ -96,7 +96,6 @@ namespace averageImage {
                     results.at<int>(r,c) = 0;
             }
         }
-
         return results;
     }
 
@@ -106,7 +105,7 @@ namespace averageImage {
         if (image.channels() > 1)
         {
             cvtColor(image, newImage, CV_BGR2GRAY);
-            cout << newImage.channels() << "\t" << newImage.size() << endl;
+            // cout << newImage.channels() << "\t" << newImage.size() << endl;
         }
         else
             newImage = image;

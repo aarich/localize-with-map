@@ -59,5 +59,6 @@ SET(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 SET(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/createDB.dir/DependInfo.cmake"
+  "CMakeFiles/createDBWithImages.dir/DependInfo.cmake"
+  "CMakeFiles/createDBWithPC.dir/DependInfo.cmake"
   )

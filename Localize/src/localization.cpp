@@ -10,16 +10,7 @@
 
 #include "cvaux.h"
 
-#include <pcl/io/vtk_lib_io.h>
-#include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
-#include <pcl/io/png_io.h>
-#include <pcl/point_cloud.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/common/io.h>
-#include <pcl/common/transforms.h>
-#include <pcl/common/common_headers.h>
-#include <pcl/filters/filter.h>
 
 #include "boost/filesystem.hpp"   
 
@@ -42,7 +33,7 @@ static void printPrompt( const string& applName )
 {
     cout 
     << "/*\n"
-    << " * Must have two folders, for images and keypoints and descriptors\n"
+    << " * Must have a folder for images and for keypoints and descriptors.\n"
     << " * Filenames must follow: \"x y z anglex angley angle z .jpg||.yaml\"\n"
     << " */\n" << endl;
 
@@ -80,7 +71,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    initModule_nonfree();
+    // initModule_nonfree();
 
     // **************
     // Get Input Data

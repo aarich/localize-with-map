@@ -5,6 +5,6 @@ pngfile.png
 	Number of images to return
 4
 	Folder to look for images.
-photos
+../../photos
 	Folder to look for keypoints and descriptors
-kpd
+../../kpd
