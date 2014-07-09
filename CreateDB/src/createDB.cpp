@@ -313,10 +313,10 @@ int main(int argc, char** argv)
     Mat gsimage = averageImage::getPixSumFromImage(image, divs);
     Mat bwimage = averageImage::aboveBelow(gsimage);
 
-    cout << gsimage <<endl;
-    imwrite("GS.jpg", gsimage);
-    namedWindow("GS");
-    imshow("GS", gsimage);
+    // cout << gsimage <<endl;
+    imwrite("GS.png", gsimage);
+    namedWindow("GSIMAGE (Line 319)");
+    imshow("GSIMAGE (Line 319)", gsimage);
     waitKey(0);
 
     vector<KeyPoint> imgSurfKeypoints;
@@ -372,12 +372,12 @@ int main(int argc, char** argv)
     {
         vector<float> ID = i->first;
 
-        int sim = gssim[ID] + 0.5*bwsim[ID] + 5*surfsim[ID] + 0.3*siftsim[ID] + orbsim[ID] + fastsim[ID];
+        int sim = /* gssim[ID] + 0.5*bwsim[ID] + */ 5*surfsim[ID] + 0.3*siftsim[ID] + orbsim[ID] + fastsim[ID];
 
-        cout << surfsim[ID] << "\t";
-        cout << siftsim[ID] << "\t";
-        cout << orbsim[ID] << "\t";
-        cout << fastsim[ID] << endl;
+        // cout << surfsim[ID] << "\t";
+        // cout << siftsim[ID] << "\t";
+        // cout << orbsim[ID] << "\t";
+        // cout << fastsim[ID] << endl;
 
         if (!gotone)
         {

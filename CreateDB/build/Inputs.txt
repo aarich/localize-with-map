@@ -18,13 +18,13 @@ input.pcd
 3
 	Number of divisions for pixel sum and black and white images
 50
-	Number of images to return
+	Images to return
 4
-	Load or Create images? (l or c)
-l
+	Load or create? (l or c)
+c
 	Folder to look for/save images.
 photos
 	Folder to look for/save keypoints and descriptors
 kpd
-	Save images to folder named above? y or n?
+	save photos?
 y

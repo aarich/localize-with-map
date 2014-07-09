@@ -1,0 +1,10 @@
+	Input image Name:
+pngfile.png
+	Number of divisions for pixel sum and black and white images
+100
+	Number of images to return
+4
+	Folder to look for images.
+photos
+	Folder to look for keypoints and descriptors
+kpd
