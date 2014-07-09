@@ -111,7 +111,7 @@ namespace averageImage {
             newImage = image;
 
         Mat iImage;
-        integral(image, iImage, CV_64F);
+        integral(newImage, iImage, CV_64F);
         
         Rect ROI (1, 1, iImage.cols-1, iImage.rows-1);
         Mat cropped = iImage(ROI);

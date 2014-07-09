@@ -17,12 +17,13 @@ namespace similarities
         Mat sifts;
         Mat bw;
         Mat pixSum;
-        float sim;
+        int sim;
     };
     // given two images of different size, return a similarity score
     int similarityOfDifferentSizedImages(const Mat& mat1, const Mat& mat2)
     {
     // TODO
+        return 10000;
     }
 
     // given two sets of keypoints and descriptors, return a similarity score
@@ -60,7 +61,7 @@ namespace similarities
     }
 
     // Elementwise disance of two images.
-    float elementWiseDistance (const Mat& mat1, const Mat& mat2)
+    int elementWiseDistance (Mat& mat1, Mat& mat2)
     {
         if (mat1.size() != mat2.size())
         {
@@ -68,40 +69,69 @@ namespace similarities
             return -1;
         } 
 
+
+        namedWindow("1");
+        imshow("1", mat1);
+        waitKey(0);
+
         int difference = 0;
+
+        // cout << mat1 << endl;
 
         for (int r = 0; r < mat1.rows; r++)
         {
             for (int c = 0; c < mat1.cols; c++)
             {
+                string t = "\t";
+                // Vec3b intensity = mat1.at<Vec3b>(r, c);
+                // cout << intensity.val[0] << "\t" << intensity.val[1] << "\t" << intensity.val[2] << endl;
+                // cout << mat1.type();// << endl;
+                // cout << "double" << mat1.at<double>(r,c) << endl;
+                // cout << "float" << mat1.at<float>(r,c) << endl;
+                // cout << "short int" << mat1.at<short int>(r,c) << endl;
+                // cout << "ushort int" << mat1.at<unsigned short int>(r,c) << endl;
+                // cout << "int" << mat1.at<int>(r,c) << endl;
+                // cout << "long int" << mat1.at<long int>(r,c) << endl;
+                // cout << "unsigned long int" << mat1.at<unsigned long int>(r,c) << endl;
+                // cout << "unsigned int" << mat1.at<unsigned int>(r,c) << endl;
+                // cout << "sizet" << mat1.at<size_t>(r,c) << endl;
+
                 difference += abs(mat1.at<int>(r,c) - mat2.at<int>(r,c));
             }
         }
 
         // Calculate mean difference
-        return difference/(mat1.rows * mat1.cols);
+        return difference / (mat1.rows * mat1.cols);
     }
 
     // Given two images, return a similarity score.
-    int getSimilarity(const Mat& mat1, const Mat& mat2)
+    int getSimilarity( Mat& mat1, Mat& mat2)
     {
+        // cout << "BLAH!" << endl;
         if (mat1.size() != mat2.size())
             return similarityOfDifferentSizedImages(mat1, mat2);
 
-        float ewd = elementWiseDistance(mat1, mat2);
-        float matrixnorm = norm(mat1, mat2);
+        int ewd = elementWiseDistance(mat1, mat2);
 
-        return (int) ewd + 0.001 * matrixnorm;
+        cout << "ewd" << ewd << endl; // << "\tmnorm "<< matrixnorm << endl;
+
+        return ewd ;//+ 0.001 * matrixnorm;
     }
 
-    float compareIandFs(iandf if1, iandf if2)
+    int compareIandFs(iandf if1, iandf if2)
     {
-        float sim = 0.0;
-        // cout << if2.pixSum << endl;
-        sim += 10*compareDescriptors(if1.surfs, if2.surfs);
-        sim += 0.3*compareDescriptors(if1.sifts, if2.sifts);
-        sim += 0*getSimilarity(if1.pixSum, if2.pixSum);
-        sim += 0*getSimilarity(if1.bw, if2.bw);
+        cout << if1.pixSum.channels() << endl;
+        cout << if2.pixSum.channels() <<endl;       
+        cout << if1.bw.channels() << endl;
+        cout << if2.bw.channels() <<endl;
+
+        int sim = 0;
+
+        sim += 10 * (int) compareDescriptors(if1.surfs, if2.surfs);
+        sim += (int) compareDescriptors(if1.sifts, if2.sifts) / 3;
+        sim += getSimilarity(if1.pixSum, if2.pixSum);
+        // cout << getSimilarity(if1.pixSum, if2.pixSum) << "\t" << getSimilarity(if1.bw, if2.bw) << endl;
+        sim += getSimilarity(if1.bw, if2.bw) / 2;
 
         return sim;
     }

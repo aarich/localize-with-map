@@ -1,5 +1,5 @@
 	Number of divisions for pixel sum and black and white images
-50
+70
 	Folder to look for images.
 photos
 	Folder to save BW images (above below)

@@ -153,7 +153,7 @@ int main(int argc, char** argv)
             imfn += boost::to_string(i->first[j]) + " ";
             kpfn += boost::to_string(i->first[j]) + " ";
         }
-        imfn += ".jpg";
+        imfn += ".png";
         kpfn += ".yml";
 
         FileStorage store(kdir + kpfn, cv::FileStorage::WRITE);

@@ -93,6 +93,12 @@ int main(int argc, char** argv)
         // Directory to look for photos
     getline( file, str ); getline( file, str );
     string dir =str.c_str();
+        // Directory to look for bw photos
+    getline( file, str ); getline( file, str );
+    string bwdir =str.c_str();
+        // Directory to look for gs photos
+    getline( file, str ); getline( file, str );
+    string gsdir =str.c_str();
         // Directory to look for kp and descriptors
     getline( file, str ); getline( file, str );
     string kdir =str.c_str();
@@ -159,33 +165,37 @@ int main(int argc, char** argv)
         imagemap[ID].sifts = descriptors;
 
         store.release();
+
+        imagemap[ID].pixSum = imread(gsdir + "/" + fn, CV_LOAD_IMAGE_GRAYSCALE);
+        imagemap[ID].bw = imread(bwdir + "/" + fn, CV_LOAD_IMAGE_GRAYSCALE);
+        cout << imagemap[ID].pixSum.row(0) << endl;
+        cout << imagemap[ID].pixSum.at<int>(0,0);
     }
 
     cout << "<\n  Analyzing Images ..." << endl;
-
-    for (map<vector<float>, similarities::iandf>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
-    {
-        vector<float> ID = i->first;
-        Mat Image = i-> second.im;
-
-        // Since these images were rendered from the 3D map, blur them?
-        // GaussianBlur( Image, Image, Size(5,5), 0, 0, BORDER_DEFAULT );
-
-        imagemap[ID].pixSum = averageImage::getPixSumFromImage(Image, divs);
-        imagemap[ID].bw = averageImage::aboveBelow(imagemap[ID].pixSum);
-    }
 
     Mat image = imread(image_name);
     similarities::iandf matchingImage;
     matchingImage.im = image;
 
-    if(! image.data )                              // Check for invalid input
+    if(! image.data ) // Check for invalid input
     {
-        cout <<  "\033[1;31mCould not open or find the image\033[0m" << std::endl ;
+        cout <<  "\033[1;31mCould not open or find the image\033[0m" << endl ;
         return -1;
     }
+
+    map<vector<float>, similarities::iandf>::iterator item = imagemap.begin();
+    int r = item->second.bw.rows;
+    if (divs != r)
+    {
+        cout <<  "\033[1;33mRequested " << divs << " divs but saved images have " << r << " divs.\033[0m" << endl;
+        divs = r;
+    }
+
     matchingImage.pixSum = averageImage::getPixSumFromImage(image, divs);
     matchingImage.bw = averageImage::aboveBelow(matchingImage.pixSum);
+
+    cout << matchingImage.pixSum.channels();
 
     // cout << gsimage <<endl;
     // imwrite("GS.png", gsimage);
