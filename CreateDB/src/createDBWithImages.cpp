@@ -66,7 +66,7 @@ void removeBad(vector<KeyPoint> kps, Mat& img)
     vector<KeyPoint>::iterator iter;
     for (iter = kps.begin(); iter != kps.end(); ) 
     {
-        Vec3b v = img.at<Vec3b>(iter->pt)
+        Vec3b v = img.at<Vec3b>(iter->pt);
         if (v == Vec3b(255, 0, 255))
             iter = kps.erase(iter);
         else
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     tm.start();
 
     int count = 0;
-    int total = imagemap.size()
+    int total = imagemap.size();
 
     cout << total << " images found.\nComputing keypoints and coarse images." << endl;
 
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
         write(store,"SurfDescriptors",Descriptors);
 
         SiftDetector.detect(i->second, Keypoints);
-        removeBad(Keypoints i->second);
+        removeBad(Keypoints, i->second);
         SiftExtractor.compute(i->second, Keypoints, Descriptors);
         write(store,"SiftDescriptors",Descriptors);
 
@@ -221,10 +221,10 @@ int main(int argc, char** argv)
         double x = s * (double) total / (double) count;
         tm.start();
 
-        count++
+        count++;
 
         if (count%50 == 0){
-            cout << 100 * count / total << " percent done. Estimated Time Remaining: " << (x-s)/60.0 << " minutes." endl;
+            cout << 100 * count / total << " percent done. Estimated Time Remaining: " << (x-s)/60.0 << " minutes." << endl;
         }
     }
 
