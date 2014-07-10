@@ -9,7 +9,6 @@ using namespace std;
 
 namespace similarities 
 {
-
     // Image and Features structure for each point and direction
     struct iandf{
         Mat im;
@@ -19,6 +18,7 @@ namespace similarities
         Mat pixSum;
         int sim;
     };
+
     // given two images of different size, return a similarity score
     int similarityOfDifferentSizedImages(const Mat& mat1, const Mat& mat2)
     {
@@ -29,6 +29,7 @@ namespace similarities
     // given two sets of keypoints and descriptors, return a similarity score
     float compareDescriptors(const Mat& desc1, const Mat& desc2)
     {
+        // First match descriptors
         FlannBasedMatcher matcher;
         vector<DMatch> matches;
         matcher.match( desc1, desc2, matches );
@@ -45,6 +46,7 @@ namespace similarities
         double total = 0.0;
         double count = 0.0;
 
+        // Only look at the good ones
         for( int i = 0; i < matches.size(); i++ )
         {
             if( matches[i].distance <= max(2*min_dist, 0.02) )
@@ -54,7 +56,7 @@ namespace similarities
             }
         }
 
-        if (count == 0.0)
+        if (count < 2)
             return 1000.0;
 
         return total / count + count / 2.0;
@@ -71,16 +73,12 @@ namespace similarities
 
         int difference = 0;
 
-        // cout << mat2 << endl;
-
-        // cout << mat2.size() << " " << mat2.channels() << endl;
-
         for (int r = 0; r < mat1.rows; r++)
-            for (int c = 0; c < mat1.cols; c++){
-                // cout << (int) (mat2.at<Vec<uchar, 1> >(4*r,4*c))[0] << " ";
+            for (int c = 0; c < mat1.cols; c++)
                 difference += abs((int) (mat1.at<Vec<uchar, 1> >(r,c))[0] - (int) (mat2.at<Vec<uchar, 1> >(4*r,4*c))[0]);
- }  // cout << endl;
-        // Calculate mean difference
+            // Total sketch with that (4*r, 4*c), but hey--if it works...
+
+        // return mean difference
         return difference / (mat1.rows * mat1.cols);
     }
 
@@ -91,7 +89,8 @@ namespace similarities
             return similarityOfDifferentSizedImages(mat1, mat2);
 
         int sim = elementWiseDistance(mat1, mat2);
-        // sim += norm(mat1, mat2);//, NORM_RELATIVE_L2);
+        // sim += norm(mat1, mat2);
+        // ^ has issues with Mat types
 
         return sim;
     }
@@ -100,6 +99,8 @@ namespace similarities
     {
         int sim = 0;
 
+        // a linear combination of similarity tests:
+        
         // sim += (int) compareDescriptors(if1.surfs, if2.surfs) * 10;
         // sim += (int) compareDescriptors(if1.sifts, if2.sifts) ;/// 3;
         sim += getSimilarity(if1.pixSum, if2.pixSum);
@@ -112,11 +113,6 @@ namespace similarities
         // << "\tABOVE: " << getSimilarity(if1.bw, if2.bw) / 2
         // << "\tTOTAL: " << sim
         // << endl;
-
-        // #define S "Match"
-        // namedWindow(S);
-        // imshow(S, if1.im);
-        // waitKey(0);
 
         return sim;
     }

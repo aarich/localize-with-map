@@ -99,6 +99,9 @@ int main(int argc, char** argv)
     float divs = atoi(str.c_str());
         // Image extension
     getline( file, str ); getline( file, str );
+    string delimiter =str.c_str();
+        // Image extension
+    getline( file, str ); getline( file, str );
     string extension =str.c_str();
         // Directory to look for photos
     getline( file, str ); getline( file, str );
@@ -118,8 +121,6 @@ int main(int argc, char** argv)
 
     map<vector<float>, Mat> imagemap;
 
-    cout << "Loading Images" << endl;
-
     vector<KeyPoint> Keypoints;
     Mat Descriptors;
 
@@ -130,6 +131,7 @@ int main(int argc, char** argv)
 
     SurfDescriptorExtractor SurfExtractor;
     SiftDescriptorExtractor SiftExtractor;
+
     // Load Images
 
     // First look into the folder to get a list of filenames
@@ -138,19 +140,20 @@ int main(int argc, char** argv)
     fs::path p(pstr);
     get_all(pstr, ret);
 
+    cout << "Attempting to load " << ret.size() << " images." << endl;
+
     for (int i = 0; i < ret.size(); i++)
     {
         // Load Image via filename
         string fn = ret[i].string();
-        // cout << fn << endl;
-        istringstream iss(fn);
         vector<string> tokens;
-        // copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
-        string delimiter = "_";
+        
         if (fn[0] != delimiter.c_str()[0]){
-            cout << "\033[1;33mExtraneous file found: " << fn << "\033[0m" << endl;
+            cout << "\033[1;33m  Extraneous file found: " << fn << "\033[0m" << endl; //]]
             continue;
         }
+
+        // Remove initial delimier
         fn = fn.substr(1,fn.length());
         size_t pos = 0;
         string token;
@@ -160,20 +163,22 @@ int main(int argc, char** argv)
             fn.erase(0, pos + delimiter.length());
             tokens.push_back(token);
         }
+
+        // reset filename
         fn = ret[i].string();
 
-            // Construct ID from filename
+        // Construct ID from filename
         vector<float> ID;
         for (int j = 0; j < 6; j++) // 6 because there are three location floats and three direction floats
             ID.push_back(::atof(tokens[j].c_str()));
+        
         string imfn = dir + "/" + fn;
 
-            // Read image and add to imagemap.
-                // cout << i << ": " << imfn << endl;
-
+        // Read image and add to imagemap.
         Mat m = imread(imfn);
         imagemap[ID] = m;
     }
+
     tm.stop();
     float load = tm.getTimeSec();
     tm.reset();
@@ -187,12 +192,12 @@ int main(int argc, char** argv)
     for (map<vector<float>, Mat>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
     {
         // Create image name and storagename
-        string imfn = "/";
-        string kpfn = "/";
+        string imfn = "/" + delimiter;
+        string kpfn = "/" + delimiter;
         for (int j = 0; j < 6; j++)
         {
-            imfn += boost::to_string(i->first[j]) + " ";
-            kpfn += boost::to_string(i->first[j]) + " ";
+            imfn += boost::to_string(i->first[j]) + delimiter;
+            kpfn += boost::to_string(i->first[j]) + delimiter;
         }
         imfn += extension;
         kpfn += ".yml";
@@ -234,8 +239,7 @@ int main(int argc, char** argv)
     cout << ">\n"
     << "Loading took " << load << " seconds for " << imagemap.size() << " images (" 
         << (int) imagemap.size()/load << " images per second)." << endl;
-cout << "Analysis took " << analysis << " seconds (" << (int) imagemap.size()/analysis << " images per second)." << endl; 
-
-
-return 0;
+    cout << "Analysis took " << analysis << " seconds (" << (int) imagemap.size()/analysis << " images per second)." << endl; 
+    
+    return 0;
 }

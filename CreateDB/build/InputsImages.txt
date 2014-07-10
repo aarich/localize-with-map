@@ -1,5 +1,7 @@
 	Number of divisions for pixel sum and black and white images
 70
+	Delimiter
+_
 	Image Extension (For loading and saving)
 .jpg
 	Folder to look for images.
