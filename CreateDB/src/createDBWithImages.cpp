@@ -61,6 +61,19 @@ void get_all(const fs::path& root, vector<fs::path>& ret)
     }
 }
 
+void removeBad(vector<KeyPoint> kps, Mat& img)
+{
+    vector<KeyPoint>::iterator iter;
+    for (iter = kps.begin(); iter != kps.end(); ) 
+    {
+        Vec3b v = img.at<Vec3b>(iter->pt)
+        if (v == Vec3b(255, 0, 255))
+            iter = kps.erase(iter);
+        else
+            ++iter;
+    }
+}
+
 int main(int argc, char** argv)
 {
     TickMeter tm;
@@ -84,6 +97,9 @@ int main(int argc, char** argv)
         // Number of divisions
     getline( file, str ); getline( file, str );
     float divs = atoi(str.c_str());
+        // Image extension
+    getline( file, str ); getline( file, str );
+    string extension =str.c_str();
         // Directory to look for photos
     getline( file, str ); getline( file, str );
     string dir =str.c_str();
@@ -102,12 +118,14 @@ int main(int argc, char** argv)
 
     map<vector<float>, Mat> imagemap;
 
+    cout << "Loading Images" << endl;
+
     vector<KeyPoint> Keypoints;
     Mat Descriptors;
 
-    int minHessian = 300;
+    int minHessian = 400;
 
-    SurfFeatureDetector SurfDetector (minHessian);
+    SurfFeatureDetector SurfDetector (3000, 6, 2, true, true);
     SiftFeatureDetector SiftDetector (minHessian);
 
     SurfDescriptorExtractor SurfExtractor;
@@ -122,19 +140,37 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < ret.size(); i++)
     {
-            // Load Image via filename
+        // Load Image via filename
         string fn = ret[i].string();
+        // cout << fn << endl;
         istringstream iss(fn);
         vector<string> tokens;
-        copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
+        // copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
+        string delimiter = "_";
+        if (fn[0] != delimiter.c_str()[0]){
+            cout << "\033[1;33mExtraneous file found: " << fn << "\033[0m" << endl;
+            continue;
+        }
+        fn = fn.substr(1,fn.length());
+        size_t pos = 0;
+        string token;
+        while ((pos = fn.find(delimiter)) != std::string::npos) 
+        {
+            token = fn.substr(0, pos);
+            fn.erase(0, pos + delimiter.length());
+            tokens.push_back(token);
+        }
+        fn = ret[i].string();
 
             // Construct ID from filename
         vector<float> ID;
-        for (int i = 0; i < 6; i++) // 6 because there are three location floats and three direction floats
-            ID.push_back(::atof(tokens[i].c_str()));
+        for (int j = 0; j < 6; j++) // 6 because there are three location floats and three direction floats
+            ID.push_back(::atof(tokens[j].c_str()));
         string imfn = dir + "/" + fn;
 
             // Read image and add to imagemap.
+                // cout << i << ": " << imfn << endl;
+
         Mat m = imread(imfn);
         imagemap[ID] = m;
     }
@@ -142,6 +178,11 @@ int main(int argc, char** argv)
     float load = tm.getTimeSec();
     tm.reset();
     tm.start();
+
+    int count = 0;
+    int total = imagemap.size()
+
+    cout << total << " images found.\nComputing keypoints and coarse images." << endl;
 
     for (map<vector<float>, Mat>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
     {
@@ -153,16 +194,18 @@ int main(int argc, char** argv)
             imfn += boost::to_string(i->first[j]) + " ";
             kpfn += boost::to_string(i->first[j]) + " ";
         }
-        imfn += ".png";
+        imfn += extension;
         kpfn += ".yml";
 
         FileStorage store(kdir + kpfn, cv::FileStorage::WRITE);
 
         SurfDetector.detect(i->second, Keypoints);
+        removeBad(Keypoints, i->second);
         SurfExtractor.compute(i->second, Keypoints, Descriptors);
         write(store,"SurfDescriptors",Descriptors);
 
         SiftDetector.detect(i->second, Keypoints);
+        removeBad(Keypoints i->second);
         SiftExtractor.compute(i->second, Keypoints, Descriptors);
         write(store,"SiftDescriptors",Descriptors);
 
@@ -172,15 +215,27 @@ int main(int argc, char** argv)
 
         imwrite(gsdir + imfn, gs);
         imwrite(bwdir + imfn, averageImage::aboveBelow(gs));
+
+        tm.stop();
+        double s = tm.getTimeSec();
+        double x = s * (double) total / (double) count;
+        tm.start();
+
+        count++
+
+        if (count%50 == 0){
+            cout << 100 * count / total << " percent done. Estimated Time Remaining: " << (x-s)/60.0 << " minutes." endl;
+        }
     }
+
     tm.stop();
     float analysis = tm.getTimeSec();
 
     cout << ">\n"
-        << "Loading took " << load << " seconds for " << imagemap.size() << " images (" 
+    << "Loading took " << load << " seconds for " << imagemap.size() << " images (" 
         << (int) imagemap.size()/load << " images per second)." << endl;
-    cout << "Analysis took " << analysis << " seconds (" << (int) imagemap.size()/analysis << " images per second)." << endl; 
-        
+cout << "Analysis took " << analysis << " seconds (" << (int) imagemap.size()/analysis << " images per second)." << endl; 
+
 
 return 0;
 }

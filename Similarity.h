@@ -57,7 +57,7 @@ namespace similarities
         if (count == 0.0)
             return 1000.0;
 
-        return total / count + count / 2;
+        return total / count + count / 2.0;
     }
 
     // Elementwise disance of two images.
@@ -67,39 +67,19 @@ namespace similarities
         {
             cout << "Error in elementWiseDistance! Matrices are not the same size";
             return -1;
-        } 
-
-
-        namedWindow("1");
-        imshow("1", mat1);
-        waitKey(0);
+        }
 
         int difference = 0;
 
-        // cout << mat1 << endl;
+        // cout << mat2 << endl;
+
+        // cout << mat2.size() << " " << mat2.channels() << endl;
 
         for (int r = 0; r < mat1.rows; r++)
-        {
-            for (int c = 0; c < mat1.cols; c++)
-            {
-                string t = "\t";
-                // Vec3b intensity = mat1.at<Vec3b>(r, c);
-                // cout << intensity.val[0] << "\t" << intensity.val[1] << "\t" << intensity.val[2] << endl;
-                // cout << mat1.type();// << endl;
-                // cout << "double" << mat1.at<double>(r,c) << endl;
-                // cout << "float" << mat1.at<float>(r,c) << endl;
-                // cout << "short int" << mat1.at<short int>(r,c) << endl;
-                // cout << "ushort int" << mat1.at<unsigned short int>(r,c) << endl;
-                // cout << "int" << mat1.at<int>(r,c) << endl;
-                // cout << "long int" << mat1.at<long int>(r,c) << endl;
-                // cout << "unsigned long int" << mat1.at<unsigned long int>(r,c) << endl;
-                // cout << "unsigned int" << mat1.at<unsigned int>(r,c) << endl;
-                // cout << "sizet" << mat1.at<size_t>(r,c) << endl;
-
-                difference += abs(mat1.at<int>(r,c) - mat2.at<int>(r,c));
-            }
-        }
-
+            for (int c = 0; c < mat1.cols; c++){
+                // cout << (int) (mat2.at<Vec<uchar, 1> >(4*r,4*c))[0] << " ";
+                difference += abs((int) (mat1.at<Vec<uchar, 1> >(r,c))[0] - (int) (mat2.at<Vec<uchar, 1> >(4*r,4*c))[0]);
+ }  // cout << endl;
         // Calculate mean difference
         return difference / (mat1.rows * mat1.cols);
     }
@@ -107,31 +87,36 @@ namespace similarities
     // Given two images, return a similarity score.
     int getSimilarity( Mat& mat1, Mat& mat2)
     {
-        // cout << "BLAH!" << endl;
         if (mat1.size() != mat2.size())
             return similarityOfDifferentSizedImages(mat1, mat2);
 
-        int ewd = elementWiseDistance(mat1, mat2);
+        int sim = elementWiseDistance(mat1, mat2);
+        // sim += norm(mat1, mat2);//, NORM_RELATIVE_L2);
 
-        cout << "ewd" << ewd << endl; // << "\tmnorm "<< matrixnorm << endl;
-
-        return ewd ;//+ 0.001 * matrixnorm;
+        return sim;
     }
 
     int compareIandFs(iandf if1, iandf if2)
     {
-        cout << if1.pixSum.channels() << endl;
-        cout << if2.pixSum.channels() <<endl;       
-        cout << if1.bw.channels() << endl;
-        cout << if2.bw.channels() <<endl;
-
         int sim = 0;
 
-        sim += 10 * (int) compareDescriptors(if1.surfs, if2.surfs);
-        sim += (int) compareDescriptors(if1.sifts, if2.sifts) / 3;
+        // sim += (int) compareDescriptors(if1.surfs, if2.surfs) * 10;
+        // sim += (int) compareDescriptors(if1.sifts, if2.sifts) ;/// 3;
         sim += getSimilarity(if1.pixSum, if2.pixSum);
-        // cout << getSimilarity(if1.pixSum, if2.pixSum) << "\t" << getSimilarity(if1.bw, if2.bw) << endl;
-        sim += getSimilarity(if1.bw, if2.bw) / 2;
+        // sim += getSimilarity(if1.bw, if2.bw);
+
+        // cout
+        // << "SURFS: " << 10 * (int) compareDescriptors(if1.surfs, if2.surfs)
+        // << "\tSIFTS: " << (int) compareDescriptors(if1.sifts, if2.sifts) / 3
+        // << "\tPXSUM: " << getSimilarity(if1.pixSum, if2.pixSum)
+        // << "\tABOVE: " << getSimilarity(if1.bw, if2.bw) / 2
+        // << "\tTOTAL: " << sim
+        // << endl;
+
+        // #define S "Match"
+        // namedWindow(S);
+        // imshow(S, if1.im);
+        // waitKey(0);
 
         return sim;
     }

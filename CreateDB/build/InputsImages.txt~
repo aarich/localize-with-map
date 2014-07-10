@@ -3,7 +3,7 @@
 	Image Extension (For loading and saving)
 .jpg
 	Folder to look for images.
-SpragueImages
+photos
 	Folder to save BW images (above below)
 ../../bwimages
 	Folder to save GS images (Average PixelSum).

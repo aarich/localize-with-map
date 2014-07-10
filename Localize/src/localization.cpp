@@ -33,8 +33,8 @@ static void printPrompt( const string& applName )
 {
     cout 
     << "/*\n"
-    << " * Must have a folder for images and for keypoints and descriptors.\n"
-    << " * Filenames must follow: \"x y z anglex angley angle z .jpg||.yaml\"\n"
+    << " * Must have four folders: See Inputs.txt for all needed and descriptions.\n"
+    << " * Filenames must follow: \"x y z anglex angley angle z .jpg||.yaml,\" for any delimiter (declared in Inputs.txt)\n"
     << " */\n" << endl;
 
     cout << endl << "Format:\n" << endl;
@@ -90,6 +90,12 @@ int main(int argc, char** argv)
         // Number of images to return
     getline( file, str ); getline( file, str );
     int numtoreturn = atoi(str.c_str());    
+        // File extension (jpg or png...)
+    getline( file, str ); getline( file, str );
+    string extension =str.c_str();
+        // Delimiter in Filenames
+    getline( file, str ); getline( file, str );
+    string delimiter =str.c_str();
         // Directory to look for photos
     getline( file, str ); getline( file, str );
     string dir =str.c_str();
@@ -124,17 +130,40 @@ int main(int argc, char** argv)
     // Get a list of all filenames
     get_all(pstr, ret);
 
+    cout << "<\n  Attempting to load " << ret.size() << " images," << endl;
+    cout << "  Then compare to " << image_name << endl;
+
     for (int i = 0; i < ret.size(); i++)
     {
         // Load Image via filename
         string fn = ret[i].string();
         istringstream iss(fn);
         vector<string> tokens;
+
+        if (fn[0] != delimiter.c_str()[0]){
+            cout << "\033[1;33m  Extraneous file found: " << fn << "\033[0m" << endl;
+                continue;
+            }
         // Split up string.
-        copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
+        // copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens)); 
+        // ^ works for string delimiters
+
+            fn = fn.substr(1, fn.length());
+
+            size_t pos = 0;
+            string token;
+            while ((pos = fn.find(delimiter)) != std::string::npos) 
+            {
+                token = fn.substr(0, pos);
+                fn.erase(0, pos + delimiter.length());
+                tokens.push_back(token);
+            }
+            fn = ret[i].string();
+
+        // cout << fn << endl;
 
         // Construct ID from filename tokens
-        vector<float> ID;
+            vector<float> ID;
         for (int j = 0; j < 6; j++) // 6 because there are three location floats and three direction floats
             ID.push_back(atof(tokens[j].c_str()));
         
@@ -146,10 +175,14 @@ int main(int argc, char** argv)
 
         // Create Filename for loading descriptors
         string kpfn = kdir + "/";
+        fn = "";
         for (int j = 0; j < ID.size(); j++)
         {
             kpfn += boost::to_string(ID[j]) + " ";
+            fn += boost::to_string(ID[j]) + " ";
         }
+
+        fn += ".jpg";
 
         kpfn = kpfn+ ".yml";
 
@@ -165,14 +198,24 @@ int main(int argc, char** argv)
         imagemap[ID].sifts = descriptors;
 
         store.release();
-
         imagemap[ID].pixSum = imread(gsdir + "/" + fn, CV_LOAD_IMAGE_GRAYSCALE);
         imagemap[ID].bw = imread(bwdir + "/" + fn, CV_LOAD_IMAGE_GRAYSCALE);
-        cout << imagemap[ID].pixSum.row(0) << endl;
-        cout << imagemap[ID].pixSum.at<int>(0,0);
+        if(! imagemap[ID].pixSum.data ) // Check for invalid input
+        {
+            cout <<  "\033[1;31mCould not open or find pixsum for " << gsdir + "/" << fn << ".\033[0m" << endl; //]]
+            return -1;
+        }
+        if(! imagemap[ID].pixSum.data ) // Check for invalid input
+        {
+            cout <<  "\033[1;31mCould not open or find bw for " << bwdir + "/" << fn << ".\033[0m" << endl; //]]
+            return -1;
+        }
+        // cout << imagemap[ID].pixSum.row(0) << endl;
+        // cout << (int) (imagemap[ID].pixSum.at<Vec<uchar, 1> >(0,0))[0];
+        // break;
     }
 
-    cout << "<\n  Analyzing Images ..." << endl;
+    cout << ">\n<\n  Analyzing Images ..." << endl;
 
     Mat image = imread(image_name);
     similarities::iandf matchingImage;
@@ -180,7 +223,7 @@ int main(int argc, char** argv)
 
     if(! image.data ) // Check for invalid input
     {
-        cout <<  "\033[1;31mCould not open or find the image\033[0m" << endl ;
+        cout <<  "\033[1;31m  Could not open or find the image\033[0m" << endl; //]]
         return -1;
     }
 
@@ -188,14 +231,17 @@ int main(int argc, char** argv)
     int r = item->second.bw.rows;
     if (divs != r)
     {
-        cout <<  "\033[1;33mRequested " << divs << " divs but saved images have " << r << " divs.\033[0m" << endl;
-        divs = r;
-    }
+            cout <<  "\033[1;33m  Requested " << divs << " divs but saved images have " << r << " divs.\033[0m" << endl; //]]
+            divs = r;
+        }
 
-    matchingImage.pixSum = averageImage::getPixSumFromImage(image, divs);
-    matchingImage.bw = averageImage::aboveBelow(matchingImage.pixSum);
+        matchingImage.pixSum = averageImage::getPixSumFromImage(image, divs);
+        matchingImage.bw = averageImage::aboveBelow(matchingImage.pixSum);
 
-    cout << matchingImage.pixSum.channels();
+        imwrite("gsimage.jpg", matchingImage.pixSum);
+        imwrite("bwimage.jpg", matchingImage.bw);
+
+    // cout << matchingImage.pixSum.channels();
 
     // cout << gsimage <<endl;
     // imwrite("GS.png", gsimage);
@@ -204,122 +250,132 @@ int main(int argc, char** argv)
     // waitKey(0);
     // destroyWindow("GSIMAGE (Line 319)");
 
-    vector<KeyPoint> imgKeypoints;
-    Mat imgDescriptors;
+        vector<KeyPoint> imgKeypoints;
+        Mat imgDescriptors;
 
-    int minHessian = 300;
+        int minHessian = 300;
 
-    SurfFeatureDetector SurfDetector (minHessian);
-    SurfDescriptorExtractor SurfExtractor;
-    SurfDetector.detect(image, imgKeypoints);
-    SurfExtractor.compute(image, imgKeypoints, imgDescriptors);
-    matchingImage.surfs = imgDescriptors;
+        SurfFeatureDetector SurfDetector (minHessian);
+        SurfDescriptorExtractor SurfExtractor;
+        SurfDetector.detect(image, imgKeypoints);
+        SurfExtractor.compute(image, imgKeypoints, imgDescriptors);
+        matchingImage.surfs = imgDescriptors;
 
-    SiftDescriptorExtractor SiftExtractor;
-    SiftFeatureDetector SiftDetector (minHessian);
-    SiftDetector.detect(image, imgKeypoints);
-    SiftExtractor.compute(image, imgKeypoints, imgDescriptors);
-    matchingImage.sifts = imgDescriptors;
+        SiftDescriptorExtractor SiftExtractor;
+        SiftFeatureDetector SiftDetector (minHessian);
+        SiftDetector.detect(image, imgKeypoints);
+        SiftExtractor.compute(image, imgKeypoints, imgDescriptors);
+        matchingImage.sifts = imgDescriptors;
 
-    TickMeter tm;
-    tm.reset();
-    tm.start();
+        TickMeter tm;
+        tm.reset();
+        tm.start();
 
-    cout << ">\n<\n  Comparing Images ..." << endl;
+        cout << ">\n<\n  Comparing Images ..." << endl;
 
-    for (map<vector<float>, similarities::iandf>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
-    {
-        vector<float> ID = i->first;
-        imagemap[ID].sim = similarities::compareIandFs(imagemap[ID], matchingImage);
-    }
+        int done = 0;
+        int total = imagemap.size();
 
-    map<vector<float>, int> top;
-    bool gotone = false;
+        for (map<vector<float>, similarities::iandf>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
+        {
+            vector<float> ID = i->first;
+            imagemap[ID].sim = similarities::compareIandFs(imagemap[ID], matchingImage);
+            done++;
+            if (done %100 == 0)
+            {
+                cout << "  " << 100 * done / total << " percent done." << endl;
+            }
+        }
 
-    typedef map<vector<float>, int>::iterator iter;
+        map<vector<float>, int> top;
+        bool gotone = false;
+
+        typedef map<vector<float>, int>::iterator iter;
+
+        cout << ">\n<\n  Choosing the Best Images ..." << endl;
 
     // Choose the best ones!
-    for (map<vector<float>, similarities::iandf>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
-    {
-        vector<float> ID = i->first;
-
-        int sim = imagemap[ID].sim;
-
-        if (!gotone)
+        for (map<vector<float>, similarities::iandf>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
         {
-            top[ID] = sim;
-            gotone = true;
-        }
+            vector<float> ID = i->first;
 
-        iter it = top.begin();
-        iter end = top.end();
-        int max_value = it->second;
-        vector<float> max_ID = it->first;
-        for( ; it != end; ++it) 
-        {
-            int current = it->second;
-            if(current > max_value) 
-            {
-                max_value = it->second;
-                max_ID = it->first;
-            }
-        }
+            int sim = imagemap[ID].sim;
 
-        // cout << "Sim: " << sim << "\tmax_value: " << max_value << endl;
-        if (top.size() < numtoreturn)
-            top[ID] = sim;
-        else
-        {
-            if (sim < max_value)
+            if (!gotone)
             {
                 top[ID] = sim;
-                top.erase(max_ID);
+                gotone = true;
             }
+
+            iter it = top.begin();
+            iter end = top.end();
+            int max_value = it->second;
+            vector<float> max_ID = it->first;
+            for( ; it != end; ++it) 
+            {
+                int current = it->second;
+                if(current > max_value) 
+                {
+                    max_value = it->second;
+                    max_ID = it->first;
+                }
+            }
+
+        // cout << "Sim: " << sim << "\tmax_value: " << max_value << endl;
+            if (top.size() < numtoreturn)
+                top[ID] = sim;
+            else
+            {
+                if (sim < max_value)
+                {
+                    top[ID] = sim;
+                    top.erase(max_ID);
+                }
+            }
+
+        }
+        tm.stop();
+        double s = tm.getTimeSec();
+
+        cout << ">\n<\n  Writing top " << numtoreturn << " images ..." << endl;
+
+        int count = 1;
+        namedWindow("Image");
+        namedWindow("Match");
+        namedWindow("ImageBW");
+        namedWindow("MatchBW");
+        namedWindow("ImageGS");
+        namedWindow("MatchGS");
+
+        // cout << matchingImage.bw;
+        // cout << matchingImage.pixSum;
+
+        imshow("Image", matchingImage.im);
+        imshow("ImageBW", matchingImage.bw);
+        imshow("ImageGS", matchingImage.pixSum);
+
+        for (iter i = top.begin(); i != top.end(); ++i)
+        {
+            vector<float> ID = i->first;
+
+            cout << "  Score: "<< i->second << endl;
+            string fn = "Sim_" + boost::to_string(i->second) + "_" + boost::to_string(count) + ".png";
+            imwrite(fn, imagemap[ID].im);
+            count++;
+
+            imshow("MatchBW", imagemap[ID].bw);
+            waitKey(1);
+            imshow("Match", imagemap[ID].im);
+            waitKey(1);
+            imshow("MatchGS", imagemap[ID].pixSum);
+
+            waitKey(10000);
+
+            // cout << imagemap[ID].bw;
         }
 
-    }
-    tm.stop();
-    double s = tm.getTimeSec();
-
-    cout << ">\n<\n  Writing top " << numtoreturn << " images ..." << endl;
-
-    int count = 1;
-    namedWindow("Image");
-    namedWindow("Match");
-    namedWindow("ImageBW");
-    namedWindow("MatchBW");
-    namedWindow("ImageGS");
-    namedWindow("MatchGS");
-
-    imshow("Image", matchingImage.im);
-    imshow("ImageBW", matchingImage.bw);
-    imshow("ImageGS", matchingImage.pixSum);
-
-    // cout << matchingImage.bw;
-
-    for (iter i = top.begin(); i != top.end(); ++i)
-    {
-        vector<float> ID = i->first;
-
-        cout << "  Score: "<< i->second << endl;
-        string fn = "Sim_" + boost::to_string(count) + "_" + boost::to_string(i->second) + ".png";
-        // imwrite(fn, imagemap[ID].im);
-        count++;
-
-        // normalize(imagemap[ID].bw, imagemap[ID].bw, 0, 255, NORM_MINMAX, CV_64F);
-        // normalize(imagemap[ID].pixSum, imagemap[ID].pixSum, 0, 255, NORM_MINMAX, CV_64F);
-
-        imshow("MatchBW", imagemap[ID].bw);
-        waitKey(1);
-        imshow("Match", imagemap[ID].im);
-        waitKey(1);
-        imshow("MatchGS", imagemap[ID].pixSum);
-
-        waitKey(10000);
-    }
-
-    cout << ">\nComparisons took " << s << " seconds for " << imagemap.size() << " images (" 
-        << (int) imagemap.size()/s << " images per second)." << endl;
+        cout << ">\nComparisons took " << s << " seconds for " << imagemap.size() << " images (" 
+            << (int) imagemap.size()/s << " images per second)." << endl;
 
 return 0;
 }
