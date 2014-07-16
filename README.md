@@ -27,6 +27,6 @@ The database has now been created. To find best matches:
    * Run `./localization Inputs.txt`
    * Images are displayed randomly, but saved in order of similarity. Smaller similarities correspond to closer matches.
 
-To change how similarity is computed, edit _Similarity.h_ under `getSimilarity()`.
+To change how similarity is computed, edit _Similarity.h_ under `compareIandFs()`.
 
 By Alex Rich and John Allard at Harvey Mudd College

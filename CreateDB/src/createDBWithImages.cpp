@@ -61,17 +61,64 @@ void get_all(const fs::path& root, vector<fs::path>& ret)
     }
 }
 
-void removeBad(vector<KeyPoint> kps, Mat& img)
+bool operator==(const KeyPoint& a, const KeyPoint& b)
 {
-    vector<KeyPoint>::iterator iter;
-    for (iter = kps.begin(); iter != kps.end(); ) 
+    string t = "\t";
+    // cout << a.angle << t << a.octave << t << a.response << t << a.size << endl;
+    // cout << b.angle << t << b.octave << t << b.response << t << b.size << endl << endl;
+    return ( ( (abs(a.angle - b.angle) < 5) + (abs(a.octave - b.octave) < 10000) + (abs(a.response - b.response) < 0.001) + (abs(a.size - b.size) < 0.4)) >2);
+    // return abs(a.angle - b.angle) < 5
+    //     && abs(a.octave - b.octave) < 10000
+    //     && abs(a.response - b.response) < 0.001
+    //     && abs(a.size - b.size) < 0.4;
+}
+bool operator!=(const KeyPoint& a, const KeyPoint& b){return !(a == b);}
+
+bool exists(vector<KeyPoint> kps, KeyPoint kp)
+{
+    for (int i = 0; i < kps.size(); i++)
     {
-        Vec3b v = img.at<Vec3b>(iter->pt);
-        if (v == Vec3b(255, 0, 255))
-            iter = kps.erase(iter);
-        else
-            ++iter;
+        KeyPoint k = kps[i];
+        if (k == kp)
+            return true;
     }
+    return false;
+}
+
+
+void removeBad(vector<KeyPoint> kps, Mat& img, vector<KeyPoint> unique_points, int skipped)
+{
+    for (int i = 0; i < kps.size(); ) 
+    {
+        // if (find(unique_points.begin(), unique_points.end(), kps[i]) != unique_points.end())
+        if (!exists(unique_points, kps[i]))
+            unique_points.push_back(kps[i]);
+        else
+            skipped++;
+        Vec3b v = img.at<Vec3b>(kps[i].pt);
+        if (v == Vec3b(255, 0, 255))
+        {
+            kps.erase(kps.begin() + i);
+        }
+        else
+            ++i;
+    }
+    // vector<KeyPoint>::iterator iter;
+    // for (iter = kps.begin(); iter != kps.end(); ) 
+    // {
+    //     if (!exists(unique_points, kps[iter-kps.begin()]))
+    //         unique_points.push_back(*iter);
+    //     else
+    //         skipped++;
+    //     Vec3b v = img.at<Vec3b>(iter->pt);
+    //     if (v == Vec3b(255, 0, 255))
+    //     {
+    //         iter = kps.erase(iter);
+    //         cout << "found a bad one" << endl;
+    //     }
+    //     else
+    //         ++iter;
+    // }
 }
 
 int main(int argc, char** argv)
@@ -124,7 +171,7 @@ int main(int argc, char** argv)
     vector<KeyPoint> Keypoints;
     Mat Descriptors;
 
-    int minHessian = 400;
+    int minHessian = 800;
 
     SurfFeatureDetector SurfDetector (3000, 6, 2, true, true);
     SiftFeatureDetector SiftDetector (minHessian);
@@ -189,6 +236,9 @@ int main(int argc, char** argv)
 
     cout << total << " images found.\nComputing keypoints and coarse images." << endl;
 
+    int skipped = 0;
+    vector<KeyPoint> unique_points;
+
     for (map<vector<float>, Mat>::iterator i = imagemap.begin(); i != imagemap.end(); ++i)
     {
         // Create image name and storagename
@@ -205,12 +255,12 @@ int main(int argc, char** argv)
         FileStorage store(kdir + kpfn, cv::FileStorage::WRITE);
 
         SurfDetector.detect(i->second, Keypoints);
-        removeBad(Keypoints, i->second);
+        removeBad(Keypoints, i->second, unique_points, skipped);
         SurfExtractor.compute(i->second, Keypoints, Descriptors);
         write(store,"SurfDescriptors",Descriptors);
 
         SiftDetector.detect(i->second, Keypoints);
-        removeBad(Keypoints, i->second);
+        removeBad(Keypoints, i->second, unique_points, skipped);
         SiftExtractor.compute(i->second, Keypoints, Descriptors);
         write(store,"SiftDescriptors",Descriptors);
 
@@ -228,18 +278,20 @@ int main(int argc, char** argv)
 
         count++;
 
-        if (count%50 == 0){
-            cout << 100 * count / total << " percent done. Estimated Time Remaining: " << (x-s)/60.0 << " minutes." << endl;
+        if ((count * 100) % (total) == 0)
+        {
+            cout << 100 * count / total << " percent done. Estimated Time Remaining: " << (x-s)/60.0 << " minutes. ";
+            cout << "Total skipped so far: " << skipped << "." << endl;
         }
     }
 
     tm.stop();
     float analysis = tm.getTimeSec();
 
-    cout << ">\n"
-    << "Loading took " << load << " seconds for " << imagemap.size() << " images (" 
+    cout << "\nLoading took " << load << " seconds for " << imagemap.size() << " images (" 
         << (int) imagemap.size()/load << " images per second)." << endl;
     cout << "Analysis took " << analysis << " seconds (" << (int) imagemap.size()/analysis << " images per second)." << endl; 
+    cout << "Skipped " << skipped << " keypoints, leaving " << unique_points.size() << " unique points." << endl;
     
     return 0;
 }

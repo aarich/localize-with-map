@@ -1,15 +1,15 @@
 	Input image Name:
-test10.jpg
+test9.jpg
 	Number of divisions for pixel sum and black and white images
 70
 	Number of images to return
-20
+5
 	File extension
 .jpg
 	File Delimiter
 _
 	Folder to look for images.
-../../CreateDB/build/SpragueImages
+../../CreateDB/build/smallRendered
 	Folder to look for bw images.
 ../../bwimages
 	Folder to look for gs images.

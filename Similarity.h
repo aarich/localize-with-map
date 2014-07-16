@@ -32,34 +32,51 @@ namespace similarities
         // First match descriptors
         FlannBasedMatcher matcher;
         vector<DMatch> matches;
-        matcher.match( desc1, desc2, matches );
+        // matcher.match( desc1, desc2, matches );
 
-        double max_dist = 0; double min_dist = 100;
+        // double max_dist = 0; double min_dist = 100;
 
-        for( int i = 0; i < matches.size(); i++ )
-        { 
-            double dist = matches[i].distance;
-            if( dist < min_dist ) min_dist = dist;
-            if( dist > max_dist ) max_dist = dist;
-        }
+        // for( int i = 0; i < matches.size(); i++ )
+        // { 
+        //     double dist = matches[i].distance;
+        //     if( dist < min_dist ) min_dist = dist;
+        //     if( dist > max_dist ) max_dist = dist;
+        // }
 
         double total = 0.0;
         double count = 0.0;
 
-        // Only look at the good ones
+        // // Only look at the good ones
+        // for( int i = 0; i < matches.size(); i++ )
+        // {
+        //     if( matches[i].distance <= max(2*min_dist, 0.02) )
+        //     { 
+        //         total += matches[i].distance;
+        //         count += 1.0;
+        //     }
+        // }
+
+        vector<vector<DMatch> > vecmatches;
+        float ratio = 0.75;
+
+        matcher.knnMatch(desc1, desc2, vecmatches, 2);
+        for (int i = 0; i < vecmatches.size(); i++)
+            if (vecmatches[i][0].distance < ratio * vecmatches[i][1].distance)
+                matches.push_back(vecmatches[i][0]);
+
         for( int i = 0; i < matches.size(); i++ )
         {
-            if( matches[i].distance <= max(2*min_dist, 0.02) )
-            { 
+            // if( matches[i].distance <= max(2*min_dist, 0.02) )
+            // { 
                 total += matches[i].distance;
                 count += 1.0;
-            }
+            // }
         }
 
         if (count < 2)
             return 1000.0;
-
-        return total / count + count / 2.0;
+        // cout << total / count << " ";
+        return 1/count; // + count / 2.0;
     }
 
     // Elementwise disance of two images.
@@ -101,9 +118,9 @@ namespace similarities
 
         // a linear combination of similarity tests:
         
-        // sim += (int) compareDescriptors(if1.surfs, if2.surfs) * 10;
+        sim += compareDescriptors(if1.surfs, if2.surfs) * 100000.0;
         // sim += (int) compareDescriptors(if1.sifts, if2.sifts) ;/// 3;
-        sim += getSimilarity(if1.pixSum, if2.pixSum);
+        // sim += getSimilarity(if1.pixSum, if2.pixSum);
         // sim += getSimilarity(if1.bw, if2.bw);
 
         // cout
